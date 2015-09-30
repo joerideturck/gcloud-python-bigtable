@@ -390,7 +390,7 @@ class Row(object):
             # processed without error.
             mutations_list.extend(to_append)
 
-    def _commit_mutate(self, timeout_seconds=None):
+    def _commit_mutate(self, timeout_seconds=None, async=True):
         """Makes a ``MutateRow`` API request.
 
         Assumes no filter is set on the :class:`Row` and is meant to be called
@@ -399,6 +399,9 @@ class Row(object):
         :type timeout_seconds: int
         :param timeout_seconds: Number of seconds for request time-out.
                                 If not passed, defaults to value set on row.
+
+        :type async: bytes
+        :param async: Boolean indicating if the GRPC call should be done asynchronous
 
         :raises: :class:`ValueError <exceptions.ValueError>` if the number of
                  mutations exceeds the ``_MAX_MUTATIONS``.
@@ -416,12 +419,11 @@ class Row(object):
             mutations=mutations_list,
         )
         timeout_seconds = timeout_seconds or self.timeout_seconds
-        response = self.client.data_stub.MutateRow.async(request_pb,
-                                                         timeout_seconds)
         # We expect a `._generated.empty_pb2.Empty`.
-        response.result()
+        response = self.client.data_stub.MutateRow.async(request_pb, timeout_seconds).result() if async \
+            else self.client.data_stub.MutateRow(request_pb, timeout_seconds)
 
-    def _commit_check_and_mutate(self, timeout_seconds=None):
+    def _commit_check_and_mutate(self, timeout_seconds=None, async=True):
         """Makes a ``CheckAndMutateRow`` API request.
 
         Assumes a filter is set on the :class:`Row` and is meant to be called
@@ -430,6 +432,9 @@ class Row(object):
         :type timeout_seconds: int
         :param timeout_seconds: Number of seconds for request time-out.
                                 If not passed, defaults to value set on row.
+
+        :type async: bytes
+        :param async: Boolean indicating if the GRPC call should be done asynchronous
 
         :rtype: bool
         :returns: Flag indicating if the filter was matched (which also
@@ -458,10 +463,11 @@ class Row(object):
             false_mutations=false_mutations,
         )
         timeout_seconds = timeout_seconds or self.timeout_seconds
-        response = self.client.data_stub.CheckAndMutateRow.async(
-            request_pb, timeout_seconds)
         # We expect a `.messages_pb2.CheckAndMutateRowResponse`
-        check_and_mutate_row_response = response.result()
+        check_and_mutate_row_response = self.client.data_stub.CheckAndMutateRow.async(
+            request_pb, timeout_seconds).result() if async \
+            else self.client.data_stub.CheckAndMutateRow(request_pb, timeout_seconds)
+
         return check_and_mutate_row_response.predicate_matched
 
     def clear_mutations(self):
@@ -472,7 +478,7 @@ class Row(object):
             self._true_pb_mutations[:] = []
             self._false_pb_mutations[:] = []
 
-    def commit(self, timeout_seconds=None):
+    def commit(self, timeout_seconds=None, async=True):
         """Makes a ``MutateRow`` or ``CheckAndMutateRow`` API request.
 
         If no mutations have been created in the row, no request is made.
@@ -493,6 +499,9 @@ class Row(object):
         :param timeout_seconds: Number of seconds for request time-out.
                                 If not passed, defaults to value set on row.
 
+        :type async: bytes
+        :param async: Boolean indicating if the GRPC call should be done asynchronous
+
         :rtype: :class:`bool` or :data:`NoneType <types.NoneType>`
         :returns: :data:`None` if there is no filter, otherwise a flag
                   indicating if the filter was matched (which also
@@ -501,10 +510,10 @@ class Row(object):
                  mutations exceeds the ``_MAX_MUTATIONS``.
         """
         if self.filter is None:
-            result = self._commit_mutate(timeout_seconds=timeout_seconds)
+            result = self._commit_mutate(timeout_seconds=timeout_seconds, async=async)
         else:
             result = self._commit_check_and_mutate(
-                timeout_seconds=timeout_seconds)
+                timeout_seconds=timeout_seconds, async=async)
 
         # Reset mutations after commit-ing request.
         self.clear_mutations()
@@ -515,7 +524,7 @@ class Row(object):
         """Removes all currently accumulated modifications on current row."""
         self._rule_pb_list[:] = []
 
-    def commit_modifications(self, timeout_seconds=None):
+    def commit_modifications(self, timeout_seconds=None, async=True):
         """Makes a ``ReadModifyWriteRow`` API request.
 
         This commits modifications made by :meth:`append_cell_value` and
@@ -531,6 +540,9 @@ class Row(object):
         :type timeout_seconds: int
         :param timeout_seconds: Number of seconds for request time-out.
                                 If not passed, defaults to value set on row.
+
+        :type async: bytes
+        :param async: Boolean indicating if the GRPC call should be done asynchronous
 
         :rtype: dict
         :returns: The new contents of all modified cells. Returned as a
@@ -566,10 +578,10 @@ class Row(object):
             rules=self._rule_pb_list,
         )
         timeout_seconds = timeout_seconds or self.timeout_seconds
-        response = self.client.data_stub.ReadModifyWriteRow.async(
-            request_pb, timeout_seconds)
+
         # We expect a `.data_pb2.Row`
-        row_response = response.result()
+        row_response = self.client.data_stub.ReadModifyWriteRow.async(request_pb, timeout_seconds).result() if async \
+            else self.client.data_stub.ReadModifyWriteRow(request_pb, timeout_seconds)
 
         # Reset modifications after commit-ing request.
         self.clear_modification_rules()
