@@ -420,8 +420,10 @@ class Row(object):
         )
         timeout_seconds = timeout_seconds or self.timeout_seconds
         # We expect a `._generated.empty_pb2.Empty`.
-        response = self.client.data_stub.MutateRow.async(request_pb, timeout_seconds).result() if async \
-            else self.client.data_stub.MutateRow(request_pb, timeout_seconds)
+        if async:
+            self.client.data_stub.MutateRow.async(request_pb, timeout_seconds).result()
+        else:
+            self.client.data_stub.MutateRow(request_pb, timeout_seconds)
 
     def _commit_check_and_mutate(self, timeout_seconds=None, async=True):
         """Makes a ``CheckAndMutateRow`` API request.
@@ -464,9 +466,11 @@ class Row(object):
         )
         timeout_seconds = timeout_seconds or self.timeout_seconds
         # We expect a `.messages_pb2.CheckAndMutateRowResponse`
-        check_and_mutate_row_response = self.client.data_stub.CheckAndMutateRow.async(
-            request_pb, timeout_seconds).result() if async \
-            else self.client.data_stub.CheckAndMutateRow(request_pb, timeout_seconds)
+        if async:
+            response = self.client.data_stub.CheckAndMutateRow.async(request_pb, timeout_seconds)
+            check_and_mutate_row_response = response.result()
+        else:
+            check_and_mutate_row_response = self.client.data_stub.CheckAndMutateRow(request_pb, timeout_seconds)
 
         return check_and_mutate_row_response.predicate_matched
 
@@ -580,8 +584,11 @@ class Row(object):
         timeout_seconds = timeout_seconds or self.timeout_seconds
 
         # We expect a `.data_pb2.Row`
-        row_response = self.client.data_stub.ReadModifyWriteRow.async(request_pb, timeout_seconds).result() if async \
-            else self.client.data_stub.ReadModifyWriteRow(request_pb, timeout_seconds)
+        if async:
+            response = self.client.data_stub.ReadModifyWriteRow.async(request_pb, timeout_seconds)
+            row_response = response.result()
+        else:
+            row_response = self.client.data_stub.ReadModifyWriteRow(request_pb, timeout_seconds)
 
         # Reset modifications after commit-ing request.
         self.clear_modification_rules()
