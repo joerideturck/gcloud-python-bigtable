@@ -435,8 +435,8 @@ class Row(object):
         :param timeout_seconds: Number of seconds for request time-out.
                                 If not passed, defaults to value set on row.
 
-        :type async: bytes
-        :param async: Boolean indicating if the GRPC call should be done asynchronous
+        :type async: bool
+        :param async: Boolean indicating if the GRPC call should be done asynchronously
 
         :rtype: bool
         :returns: Flag indicating if the filter was matched (which also
@@ -503,8 +503,8 @@ class Row(object):
         :param timeout_seconds: Number of seconds for request time-out.
                                 If not passed, defaults to value set on row.
 
-        :type async: bytes
-        :param async: Boolean indicating if the GRPC call should be done asynchronous
+        :type async: bool
+        :param async: Boolean indicating if the GRPC call should be done asynchronously
 
         :rtype: :class:`bool` or :data:`NoneType <types.NoneType>`
         :returns: :data:`None` if there is no filter, otherwise a flag
@@ -545,8 +545,8 @@ class Row(object):
         :param timeout_seconds: Number of seconds for request time-out.
                                 If not passed, defaults to value set on row.
 
-        :type async: bytes
-        :param async: Boolean indicating if the GRPC call should be done asynchronous
+        :type async: bool
+        :param async: Boolean indicating if the GRPC call should be done asynchronously
 
         :rtype: dict
         :returns: The new contents of all modified cells. Returned as a
