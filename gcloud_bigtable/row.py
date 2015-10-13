@@ -403,6 +403,8 @@ class Row(object):
         :type async: bytes
         :param async: Boolean indicating if the GRPC call should be done asynchronous
 
+        :rtype:  :class:`grpc.framework.foundation.future.Future` or None
+        :returns: :class:`grpc.framework.foundation.future.Future` if async=True else None
         :raises: :class:`ValueError <exceptions.ValueError>` if the number of
                  mutations exceeds the ``_MAX_MUTATIONS``.
         """
@@ -421,9 +423,11 @@ class Row(object):
         timeout_seconds = timeout_seconds or self.timeout_seconds
         # We expect a `._generated.empty_pb2.Empty`.
         if async:
-            self.client.data_stub.MutateRow.async(request_pb, timeout_seconds).result()
+            response = self.client.data_stub.MutateRow.async(request_pb, timeout_seconds)
         else:
-            self.client.data_stub.MutateRow(request_pb, timeout_seconds)
+            response = self.client.data_stub.MutateRow(request_pb, timeout_seconds)
+
+        return response
 
     def _commit_check_and_mutate(self, timeout_seconds=None, async=True):
         """Makes a ``CheckAndMutateRow`` API request.
@@ -438,8 +442,8 @@ class Row(object):
         :type async: bool
         :param async: Boolean indicating if the GRPC call should be done asynchronously
 
-        :rtype: bool
-        :returns: Flag indicating if the filter was matched (which also
+        :rtype: :class:`grpc.framework.foundation.future.Future` or bool
+        :returns: :class:`grpc.framework.foundation.future.Future` if async=True, else flag indicating if the filter was matched (which also
                   indicates which set of mutations were applied by the server).
         :raises: :class:`ValueError <exceptions.ValueError>` if the number of
                  mutations exceeds the ``_MAX_MUTATIONS``.
@@ -470,9 +474,9 @@ class Row(object):
             response = self.client.data_stub.CheckAndMutateRow.async(request_pb, timeout_seconds)
             check_and_mutate_row_response = response.result()
         else:
-            check_and_mutate_row_response = self.client.data_stub.CheckAndMutateRow(request_pb, timeout_seconds)
+            check_and_mutate_row_response = self.client.data_stub.CheckAndMutateRow(request_pb, timeout_seconds).predicate_matched
 
-        return check_and_mutate_row_response.predicate_matched
+        return check_and_mutate_row_response
 
     def clear_mutations(self):
         """Removes all currently accumulated mutations on the current row."""
@@ -506,8 +510,9 @@ class Row(object):
         :type async: bool
         :param async: Boolean indicating if the GRPC call should be done asynchronously
 
-        :rtype: :class:`bool` or :data:`NoneType <types.NoneType>`
-        :returns: :data:`None` if there is no filter, otherwise a flag
+        :rtype: :class:`bool` or :data:`NoneType <types.NoneType>` or :class:`grpc.framework.foundation.future.Future`
+        :returns: :class:`grpc.framework.foundation.future.Future` if async=True else
+                  :data:`None` if there is no filter, otherwise a flag
                   indicating if the filter was matched (which also
                   indicates which set of mutations were applied by the server).
         :raises: :class:`ValueError <exceptions.ValueError>` if the number of
